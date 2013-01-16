@@ -134,6 +134,11 @@ function to_2d_coord(position, map_boundaries, width, height) {
 }
 
 function setup(target) {
+	// trigger loading
+	var map = target.getElementsByClassName('map')[0];
+	map.classList.add('loading');
+
+	// send data request
 	var replayRequest = new XMLHttpRequest();
 	replayRequest.open("GET", "data/output.json");
 	replayRequest.onreadystatechange = function(state) {
@@ -143,9 +148,11 @@ function setup(target) {
 
 		// proces data
 		var data = JSON.parse(replayRequest.response);
-		var map = target.getElementsByClassName('map')[0];
+
 		var mapURL = 'maps/no-border/' + data["map"] + "_" + data["mode"] + ".png";
 		map.setAttribute('src', mapURL);
+
+		map.classList.remove('loading');
 
 		// play
 		replay(data, target);
