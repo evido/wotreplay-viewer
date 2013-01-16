@@ -82,10 +82,11 @@ function replay(data) {
 
 		show(model);
 		
-		if (ix < packets.length) {
+		var next_ix = start_ix + ix;
+		if (next_ix < packets.length) {
 			setTimeout(function() {
-				update(model, packets, start + window_size, window_size, start_ix + ix);
-			}, 50);	
+				update(model, packets, start + window_size, window_size, next_ix);
+			}, 100);	
 		}
 	}
 
