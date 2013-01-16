@@ -3,11 +3,35 @@
 	<head>
 		<title>WOT Replay Player</title>
 		<script type="text/javascript" src="scripts/wot.js"></script>
+		<script type="text/javascript">
+			window.onload = function() {
+				var target = document.getElementById("target");
+				setup(target);
+			}
+		</script>
+		<link rel="stylesheet" type="text/css" href="style/wot.css">
+		<style>
+			body {
+				background: #f2f2f2;
+			}
+
+			.replay-viewer {
+				border-style: solid;
+				border-width: 1px;
+				border-color: #AAAAAA;
+				margin-left: auto;
+				margin-right: auto;
+				display: block;
+			}
+		</style>
 	</head>
-	<body onload="javascript:setup()">
-		<div id="target" style="position: relative">
-			<img id="map" src="" width="500" height="500" style="position: absolute" />
-			<canvas id="overlay" width="500" height="500" style="position: absolute" />
+
+	<body>
+		<div class="holder">
+			<div id="target" class="replay-viewer">
+				<img id="map" class="map" src="" width="500" height="500" />
+				<canvas id="overlay" class="overlay" width="500" height="500" />
+			</div>
 		</div>
 	</body>
 </html>

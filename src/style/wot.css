@@ -1,0 +1,15 @@
+.replay-viewer {
+	position: relative;
+	width: 500px;
+	height: 500px;
+}
+
+.replay-viewer .map {
+	background-image: url('img/ajax-loader.gif');
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.replay-viewer .overlay, .replay-viewer .map{
+	position: absolute;
+}

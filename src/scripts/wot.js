@@ -53,11 +53,11 @@ Model.prototype = {
 	}
 }
 
-function replay(data) {
-	var overlay = document.getElementById('overlay');
+function replay(data, target) {
+	var overlay = target.getElementsByClassName("overlay")[0];
+	var ctx = overlay.getContext("2d");
 	var clock = 0, i = 0;
 	var model = new Model();
-
 	var update = function(model, packets, start, window_size, start_ix) {
 		var ix;
 		for (ix = 0; (start_ix + ix) < packets.length; ix++) {
@@ -76,7 +76,7 @@ function replay(data) {
 			model.update(packet);
 		}
 
-		show(model);
+		show(model, ctx);
 		
 		var next_ix = start_ix + ix;
 		if (next_ix < packets.length) {
@@ -89,10 +89,7 @@ function replay(data) {
 	update(model, data.packets, 0.0, 0.2, 0);
 }
 
-function show(model) {
-	var overlay = document.getElementById('overlay');
-	var ctx = overlay.getContext("2d");
-
+function show(model, ctx) {
 	// reset overlay
 	ctx.clearRect(0, 0, 500, 500);
 
@@ -136,7 +133,7 @@ function to_2d_coord(position, map_boundaries, width, height) {
     return { x: x, y: y };
 }
 
-function setup() {
+function setup(target) {
 	var replayRequest = new XMLHttpRequest();
 	replayRequest.open("GET", "data/output.json");
 	replayRequest.onreadystatechange = function(state) {
@@ -146,12 +143,12 @@ function setup() {
 
 		// proces data
 		var data = JSON.parse(replayRequest.response);
-		var map = document.getElementById('map');
+		var map = target.getElementsByClassName('map')[0];
 		var mapURL = 'maps/no-border/' + data["map"] + "_" + data["mode"] + ".png";
 		map.setAttribute('src', mapURL);
 
 		// play
-		replay(data);
+		replay(data, target);
 	}
 	replayRequest.send();
 }
