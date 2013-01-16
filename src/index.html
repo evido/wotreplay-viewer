@@ -1,7 +1,13 @@
 <!doctype HTML>
 <html>
 	<head>
+		<title>WOT Replay Player</title>
+		<script type="text/javascript" src="scripts/wot.js"></script>
 	</head>
-	<body>
+	<body onload="javascript:setup()">
+		<div id="target" style="position: relative">
+			<img id="map" src="" width="500" height="500" style="position: absolute" />
+			<canvas id="overlay" width="500" height="500" style="position: absolute" />
+		</div>
 	</body>
 </html>
