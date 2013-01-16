@@ -96,7 +96,7 @@ function show(model, ctx) {
 	ctx.fillStyle = "#FFFF00";
 	ctx.textBaseline = "top";
 	ctx.font = "bold 20px sans-serif";
-	ctx.fillText(String(model.clock.toFixed(2)), 10, 5);
+	ctx.fillText(String(model.clock.toFixed(2)), 8, 5);
 
 	for (var player_id in model.players) {
 		var player = model.players[player_id];
