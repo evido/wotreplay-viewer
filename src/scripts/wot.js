@@ -1,17 +1,23 @@
+// Definition of Player object.
 var Player = function() {
-	return {
-		id: null,
-		position: null,
-		team: null,
-		alive: null
-	};
+	this.id 		= null;
+	this.position 	= null;
+	this.team 		= null;
+	this.alive		= null;
 }
 
-var Model = function() {
-	var players = {};
-	var clock   = 0;
+Player.prototype = {
 
-	var getPlayer = function(id) {
+}
+
+// Definition of Model object
+var Model = function() {
+	this.players 	= {};
+	this.clock		= 0;
+}
+
+Model.prototype = {
+	getPlayer: function(id) {
 		var player = this.players[id];
 		if (typeof(player) == 'undefined') {
 			player = new Player();
@@ -20,9 +26,8 @@ var Model = function() {
 			this.players[id] = player;
 		}
 		return player;
-	}
-
-	var update = function(frame) {
+	},
+	update: function(frame) {
 		// update clock
 		if (typeof(frame.clock) == 'undefined') {
 			return;
@@ -46,21 +51,12 @@ var Model = function() {
 			player.alive = false;
 		}
 	}
-
-	return {
-		getPlayer: getPlayer,
-		players: players,
-		clock: clock,
-		update: update
-	};
 }
-
-var model;
 
 function replay(data) {
 	var overlay = document.getElementById('overlay');
 	var clock = 0, i = 0;
-	model = new Model();
+	var model = new Model();
 
 	var update = function(model, packets, start, window_size, start_ix) {
 		var ix;
