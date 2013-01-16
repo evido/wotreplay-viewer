@@ -53,8 +53,7 @@ Model.prototype = {
 	}
 }
 
-function replay(data, target) {
-	var overlay = target.getElementsByClassName("overlay")[0];
+function replay(data, overlay) {
 	var ctx = overlay.getContext("2d");
 	var clock = 0, i = 0;
 	var model = new Model();
@@ -134,9 +133,20 @@ function to_2d_coord(position, map_boundaries, width, height) {
 }
 
 function setup(target) {
-	// trigger loading
-	var map = target.getElementsByClassName('map')[0];
+
+	// configure the target element as a replay viewer
+	target.classList.add('replay-viewer');
+
+	var map = document.createElement('img');
+	map.classList.add('map');
 	map.classList.add('loading');
+	map.width = map.height = 500
+	target.appendChild(map);
+
+	var overlay = document.createElement('canvas');
+	overlay.classList.add('overlay');
+	overlay.width = overlay.height = 500;
+	target.appendChild(overlay);
 
 	// send data request
 	var replayRequest = new XMLHttpRequest();
@@ -155,7 +165,8 @@ function setup(target) {
 		map.classList.remove('loading');
 
 		// play
-		replay(data, target);
+		replay(data, overlay);
 	}
+
 	replayRequest.send();
 }
