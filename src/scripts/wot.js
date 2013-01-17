@@ -4,6 +4,7 @@ var Player = function() {
 	this.position 	= null;
 	this.team 		= null;
 	this.alive		= null;
+	this.clock		= null;
 }
 
 Player.prototype = {
@@ -36,19 +37,21 @@ Model.prototype = {
 		if (frame.clock != null) {
 			this.clock = frame.clock;
 		}
-			
+
 		// we are only interested in the packet if it has a clock / player / team values
 		if (typeof(frame.position) != 'undefined' 
 				&& typeof(frame.player_id) != 'undefined') {
 			var player = this.getPlayer(frame.player_id);
 			player.position = frame.position;
 			player.team 	= frame.team;
+			player.clock	= this.clock;
 		}
 
 		if (typeof(frame.target) != 'undefined'
 				&& typeof(frame.destroyed_by) != 'undefined') {
 			var player 	 = this.getPlayer(frame.target);
 			player.alive = false;
+			player.clock = this.clock;
 		}
 	}
 }
@@ -75,7 +78,7 @@ function replay(data, overlay) {
 			model.update(packet);
 		}
 
-		show(model, ctx);
+		show(data, model, ctx);
 		
 		var next_ix = start_ix + ix;
 		if (next_ix < packets.length) {
@@ -88,7 +91,7 @@ function replay(data, overlay) {
 	update(model, data.packets, 0.0, 0.2, 0);
 }
 
-function show(model, ctx) {
+function show(data, model, ctx) {
 	// reset overlay
 	ctx.clearRect(0, 0, 500, 500);
 
@@ -100,20 +103,27 @@ function show(model, ctx) {
 	for (var player_id in model.players) {
 		var player = model.players[player_id];
 		if (typeof(player.team) == undefined
-				|| player.position == null) {
+				|| player.position == null
+				|| [0,1].indexOf(player.team) < 0) {
 			continue;
 		}
 
 		var coord = to_2d_coord(player.position, [-500, 500, -500, 500], 500, 500);
 		
-		var styles = [
-			"#00FF00",
-			"#FF0000"
+		var colors = [
+			[0, 255, 0],
+			[255, 0, 0]
 		];
 
+		var recorder_color = [0, 0, 255];
+
 		ctx.lineWidth = 2;
-		ctx.strokeStyle = styles[player.team];
-		ctx.fillStyle = styles[player.team];
+		var color = player.id == data.recorder_id ?  recorder_color : colors[player.team];
+		var age   = player.alive ? ((model.clock - player.clock) / 20) : 0;
+		age = age > 0.66 ? 0.66 : age;
+		var style = "rgba(" + color[0] + "," + color[1] + "," + color[2] + "," + (1 - age) +  ")";
+
+		ctx.strokeStyle = ctx.fillStyle = style;
 		ctx.beginPath();
 		ctx.arc(coord.x, coord.y, 3, 0, 2*Math.PI);
 
@@ -133,7 +143,6 @@ function to_2d_coord(position, map_boundaries, width, height) {
 }
 
 function setup(target) {
-
 	// configure the target element as a replay viewer
 	target.classList.add('replay-viewer');
 
@@ -157,8 +166,7 @@ function setup(target) {
 		}
 
 		// proces data
-		var data = JSON.parse(replayRequest.response);
-
+		var data = JSON.parse(replayRequest.response)
 		var mapURL = 'maps/no-border/' + data["map"] + "_" + data["mode"] + ".png";
 		map.setAttribute('src', mapURL);
 
