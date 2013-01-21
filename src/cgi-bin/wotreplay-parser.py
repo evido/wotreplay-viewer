@@ -14,7 +14,6 @@ cgitb.enable()
 response = "Content-Type: application/json\n"
 
 form = cgi.FieldStorage()
-# fd, path = tempfile.mkstemp('.wotreplay', 'tmp', "/nfs/www/jan/data/wotreplays/");
 fd, path = tempfile.mkstemp('.wotreplay', 'tmp', "/Users/jantemmerman/Sites/data/");
 replay = os.fdopen(fd, 'wb')
 replay.write(form['file'].value)

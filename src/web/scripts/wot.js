@@ -168,7 +168,7 @@ function setup(target, webservice, file) {
 
 		// proces data
 		var data = JSON.parse(replayRequest.response)
-		var mapURL = 'maps/no-border/' + data["map"] + "_" + data["mode"] + ".png";
+		var mapURL = 'maps/' + data["map"] + "_" + data["mode"] + ".png";
 		map.setAttribute('src', mapURL);
 
 		map.classList.remove('loading');
