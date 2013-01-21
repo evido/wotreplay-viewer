@@ -142,7 +142,7 @@ function to_2d_coord(position, map_boundaries, width, height) {
     return { x: x, y: y };
 }
 
-function setup(target) {
+function setup(target, webservice, file) {
 	// configure the target element as a replay viewer
 	target.classList.add('replay-viewer');
 
@@ -159,7 +159,8 @@ function setup(target) {
 
 	// send data request
 	var replayRequest = new XMLHttpRequest();
-	replayRequest.open("GET", "data/output.json");
+	replayRequest.open("POST", webservice, true);
+	
 	replayRequest.onreadystatechange = function(state) {
 		if(replayRequest.readyState != XMLHttpRequest.DONE) {
 			return;
@@ -176,5 +177,7 @@ function setup(target) {
 		replay(data, overlay);
 	}
 
-	replayRequest.send();
+	var formData = new FormData();
+	formData.append("file", file);
+	replayRequest.send(formData);
 }
