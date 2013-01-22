@@ -56,82 +56,147 @@ Model.prototype = {
 	}
 }
 
-function replay(data, overlay) {
-	var ctx = overlay.getContext("2d");
-	var clock = 0, i = 0;
-	var model = new Model();
-	var update = function(model, packets, start, window_size, start_ix) {
-		var ix;
-		for (ix = 0; (start_ix + ix) < packets.length; ix++) {
-			var packet = packets[start_ix + ix];
+var Viewer = function(target, serviceUrl) {
+	this.target = target;
+	this.serviceUrl = serviceUrl;
+	this.overlay = null;
+	this.model = null;
 
-			if (typeof(packet.clock) == 'undefined') {
+	// configure the target element as a replay viewer
+	target.classList.add('replay-viewer');
+
+	this.map = document.createElement('img');
+	this.map.classList.add('map');
+	this.map.width = this.map.height = 500
+	this.target.appendChild(this.map);
+
+	this.overlay = document.createElement('canvas');
+	this.overlay.classList.add('overlay');
+	this.overlay.width = this.overlay .height = 500;
+	this.target.appendChild(this.overlay);
+
+	var hash = window.location.hash;
+	if (hash.length) {
+		var id = hash.substr(1);
+		this.fetch(id);
+	}
+}
+
+Viewer.prototype = {
+	replay: function(data) {
+		var ctx = this.overlay.getContext("2d");
+		var clock = 0, i = 0;
+		this.model = new Model();
+		var model = this.model;
+		var viewer = this;
+		var update = function(model, packets, start, window_size, start_ix) {
+			var ix;
+			for (ix = 0; (start_ix + ix) < packets.length; ix++) {
+				var packet = packets[start_ix + ix];
+
+				if (typeof(packet.clock) == 'undefined') {
+					continue;
+				}
+
+				// escape when outside of window size
+				if (packet.clock > (start + window_size)) {
+					break;
+				}
+
+				// update model with packet
+				model.update(packet);
+			}
+
+			viewer.show(data, ctx);
+			
+			var next_ix = start_ix + ix;
+			if (next_ix < packets.length) {
+				setTimeout(function() {
+					update(model, packets, start + window_size, window_size, next_ix);
+				}, 100);	
+			}
+		}
+
+		update(this.model, data.packets, 0.0, 0.2, 0);
+	},
+	show: function(data, ctx) {
+		// reset overlay
+		ctx.clearRect(0, 0, 500, 500);
+
+		ctx.fillStyle = "#FFFF00";
+		ctx.textBaseline = "top";
+		ctx.font = "bold 20px sans-serif";
+		ctx.fillText(String(this.model.clock.toFixed(2)), 8, 5);
+
+		for (var player_id in this.model.players) {
+			var player = this.model.players[player_id];
+			if (typeof(player.team) == undefined
+					|| player.position == null
+					|| [0,1].indexOf(player.team) < 0) {
 				continue;
 			}
 
-			// escape when outside of window size
-			if (packet.clock > (start + window_size)) {
-				break;
+			var coord = to_2d_coord(player.position, [-500, 500, -500, 500], 500, 500);
+			
+			var colors = [
+				[0, 255, 0],
+				[255, 0, 0]
+			];
+
+			var recorder_color = [0, 0, 255];
+
+			ctx.lineWidth = 2;
+			var color = player.id == data.recorder_id ?  recorder_color : colors[player.team];
+			var age   = player.alive ? ((this.model.clock - player.clock) / 20) : 0;
+			age = age > 0.66 ? 0.66 : age;
+			var style = "rgba(" + color[0] + "," + color[1] + "," + color[2] + "," + (1 - age) +  ")";
+
+			ctx.strokeStyle = ctx.fillStyle = style;
+			ctx.beginPath();
+			ctx.arc(coord.x, coord.y, 3, 0, 2*Math.PI);
+
+			if (player.alive) {
+				ctx.fill();
+			} else {
+				ctx.stroke();	
+			}
+		}
+	},
+	fetch: function(id) {
+		this.serviceRequest({id: id});
+	},
+	process: function(file) {
+		this.serviceRequest({file: file});
+	},
+	serviceRequest: function(values) {
+		// send data request
+		var replayRequest = new XMLHttpRequest();
+		replayRequest.open("POST", this.serviceUrl, true);
+		
+		var map = this.map;
+		var viewer = this;
+		map.classList.add('loading');
+		replayRequest.onreadystatechange = function(state) {
+			if(replayRequest.readyState != XMLHttpRequest.DONE) {
+				return;
 			}
 
-			// update model with packet
-			model.update(packet);
+			// proces data
+			var data = JSON.parse(replayRequest.response)
+			var mapURL = 'maps/' + data["map"] + "_" + data["mode"] + ".png";
+			map.setAttribute('src', mapURL);
+			map.classList.remove('loading');
+
+			// play
+			viewer.replay(data);
 		}
 
-		show(data, model, ctx);
-		
-		var next_ix = start_ix + ix;
-		if (next_ix < packets.length) {
-			setTimeout(function() {
-				update(model, packets, start + window_size, window_size, next_ix);
-			}, 100);	
-		}
-	}
-
-	update(model, data.packets, 0.0, 0.2, 0);
-}
-
-function show(data, model, ctx) {
-	// reset overlay
-	ctx.clearRect(0, 0, 500, 500);
-
-	ctx.fillStyle = "#FFFF00";
-	ctx.textBaseline = "top";
-	ctx.font = "bold 20px sans-serif";
-	ctx.fillText(String(model.clock.toFixed(2)), 8, 5);
-
-	for (var player_id in model.players) {
-		var player = model.players[player_id];
-		if (typeof(player.team) == undefined
-				|| player.position == null
-				|| [0,1].indexOf(player.team) < 0) {
-			continue;
+		var formData = new FormData();
+		for (key in values) {
+			formData.append(key, values[key]);
 		}
 
-		var coord = to_2d_coord(player.position, [-500, 500, -500, 500], 500, 500);
-		
-		var colors = [
-			[0, 255, 0],
-			[255, 0, 0]
-		];
-
-		var recorder_color = [0, 0, 255];
-
-		ctx.lineWidth = 2;
-		var color = player.id == data.recorder_id ?  recorder_color : colors[player.team];
-		var age   = player.alive ? ((model.clock - player.clock) / 20) : 0;
-		age = age > 0.66 ? 0.66 : age;
-		var style = "rgba(" + color[0] + "," + color[1] + "," + color[2] + "," + (1 - age) +  ")";
-
-		ctx.strokeStyle = ctx.fillStyle = style;
-		ctx.beginPath();
-		ctx.arc(coord.x, coord.y, 3, 0, 2*Math.PI);
-
-		if (player.alive) {
-			ctx.fill();
-		} else {
-			ctx.stroke();	
-		}
+		replayRequest.send(formData);
 	}
 }
 
@@ -140,87 +205,4 @@ function to_2d_coord(position, map_boundaries, width, height) {
     x = (x - map_boundaries[0]) * (width / (map_boundaries[1] - map_boundaries[0] + 1));
     y = (map_boundaries[3] - y) * (height / (map_boundaries[3] - map_boundaries[2] + 1));
     return { x: x, y: y };
-}
-
-function initViewer(target, webservice) {
-	// process window url
-	var hash = window.location.hash;
-	if (hash.length) {
-		var id = hash.substr(1);
-		fetchReplay(target, webservice, id);
-	}
-}
-
-function fetchReplay(target, webservice, id) {
-	// send data request
-	var replayRequest = new XMLHttpRequest();
-	replayRequest.open("POST", webservice, true);
-	
-	replayRequest.onreadystatechange = function(state) {
-		if(replayRequest.readyState != XMLHttpRequest.DONE) {
-			return;
-		}
-
-		// proces data
-		var data = JSON.parse(replayRequest.response)
-		var mapURL = 'maps/' + data["map"] + "_" + data["mode"] + ".png";
-		var map = document.getElementsByClassName("map")[0];
-		map.setAttribute('src', mapURL);
-
-		map.classList.remove('loading');
-
-		// play
-		var overlay = document.getElementsByClassName("overlay")[0];
-		replay(data, overlay);
-	}
-
-	var formData = new FormData();
-	formData.append("id", id);
-	replayRequest.send(formData);
-}
-
-function processNewReplay(target, webservice, file) {
-	// send data request
-	var replayRequest = new XMLHttpRequest();
-	replayRequest.open("POST", webservice, true);
-	
-	replayRequest.onreadystatechange = function(state) {
-		if(replayRequest.readyState != XMLHttpRequest.DONE) {
-			return;
-		}
-
-		// proces data
-		var data = JSON.parse(replayRequest.response)
-		var mapURL = 'maps/' + data["map"] + "_" + data["mode"] + ".png";
-		var map = document.getElementsByClassName("map")[0];
-		map.setAttribute('src', mapURL);
-
-		map.classList.remove('loading');
-
-		// play
-		var overlay = document.getElementsByClassName("overlay")[0];
-		replay(data, overlay);
-	}
-
-	var formData = new FormData();
-	formData.append("file", file);
-	replayRequest.send(formData);
-}
-
-function setup(target, webservice) {
-	// configure the target element as a replay viewer
-	target.classList.add('replay-viewer');
-
-	var map = document.createElement('img');
-	map.classList.add('map');
-	map.classList.add('loading');
-	map.width = map.height = 500
-	target.appendChild(map);
-
-	var overlay = document.createElement('canvas');
-	overlay.classList.add('overlay');
-	overlay.width = overlay.height = 500;
-	target.appendChild(overlay);
-
-	initViewer(target, webservice);
 }
