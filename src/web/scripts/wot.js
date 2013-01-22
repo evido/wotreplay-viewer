@@ -180,8 +180,14 @@ Viewer.prototype = {
 				return;
 			}
 
+			if (replayRequest.status != 200) {
+				alert('Server request failed!');
+				return;
+			}
+
 			// proces data
-			var data = JSON.parse(replayRequest.response)
+			var response = JSON.parse(replayRequest.response);
+			var data = response.data;
 			var mapURL = 'maps/' + data["map"] + "_" + data["mode"] + ".png";
 			map.setAttribute('src', mapURL);
 			map.classList.remove('loading');
