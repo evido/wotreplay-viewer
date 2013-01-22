@@ -59,7 +59,6 @@ Model.prototype = {
 var Viewer = function(target, serviceUrl) {
 	this.target = target;
 	this.serviceUrl = serviceUrl;
-	this.overlay = null;
 	this.model = null;
 
 	// configure the target element as a replay viewer
@@ -85,39 +84,34 @@ var Viewer = function(target, serviceUrl) {
 Viewer.prototype = {
 	replay: function(data) {
 		var ctx = this.overlay.getContext("2d");
-		var clock = 0, i = 0;
 		this.model = new Model();
-		var model = this.model;
-		var viewer = this;
-		var update = function(model, packets, start, window_size, start_ix) {
-			var ix;
-			for (ix = 0; (start_ix + ix) < packets.length; ix++) {
-				var packet = packets[start_ix + ix];
+
+		var update = function(packets, window_start, window_size, start_ix) {
+			var window_end = window_start + window_size, ix;
+			for (ix = start_ix; ix < packets.length; ix++) {
+				var packet = packets[ix];
 
 				if (typeof(packet.clock) == 'undefined') {
 					continue;
 				}
 
 				// escape when outside of window size
-				if (packet.clock > (start + window_size)) {
+				if (packet.clock > window_end) {
 					break;
 				}
 
 				// update model with packet
-				model.update(packet);
+				this.model.update(packet);
 			}
 
-			viewer.show(data, ctx);
+			this.show(data, ctx);
 			
-			var next_ix = start_ix + ix;
-			if (next_ix < packets.length) {
-				setTimeout(function() {
-					update(model, packets, start + window_size, window_size, next_ix);
-				}, 100);	
+			if (ix < packets.length) {
+				setTimeout(update.bind(this, packets, window_end, window_size, ix), 100);	
 			}
 		}
 
-		update(this.model, data.packets, 0.0, 0.2, 0);
+		update.call(this, data.packets, 0.0, 0.2, 0);
 	},
 	show: function(data, ctx) {
 		// reset overlay
