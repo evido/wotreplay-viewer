@@ -86,7 +86,12 @@ Viewer.prototype = {
 		var ctx = this.overlay.getContext("2d");
 		this.model = new Model();
 
-		var update = function(packets, window_start, window_size, start_ix) {
+		var update = function(model, packets, window_start, window_size, start_ix) {
+			// model of the viewer change -> stop
+			if (this.model != model) {
+				return;
+			}
+
 			var window_end = window_start + window_size, ix;
 			for (ix = start_ix; ix < packets.length; ix++) {
 				var packet = packets[ix];
@@ -101,17 +106,17 @@ Viewer.prototype = {
 				}
 
 				// update model with packet
-				this.model.update(packet);
+				model.update(packet);
 			}
 
 			this.show(data, ctx);
 			
 			if (ix < packets.length) {
-				setTimeout(update.bind(this, packets, window_end, window_size, ix), 100);	
+				setTimeout(update.bind(this, model, packets, window_end, window_size, ix), 100);	
 			}
 		}
 
-		update.call(this, data.packets, 0.0, 0.2, 0);
+		update.call(this, this.model, data.packets, 0.0, 0.2, 0);
 	},
 	show: function(data, ctx) {
 		// reset overlay
