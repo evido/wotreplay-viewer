@@ -4,19 +4,28 @@
 		<title>wotreplay-viewer</title>
 		<script type="text/javascript" src="scripts/wot.js"></script>
 		<script type="text/javascript">
-			var viewer = null;
-
 			window.onload = function() {
 				var target = document.getElementById("target");
 				var serviceUrl = "/cgi-bin/wotreplay-parser.py";
-				viewer = new Viewer(target, serviceUrl);
-			}
+				var viewer = new Viewer(target, serviceUrl);
 
-			function process() {
-				var filesInput = document.getElementById("filesInput");
-				var file = filesInput.files[0];
-				viewer.process(file);
-			}
+				// process hash
+				var hash = window.location.hash;
+				if (hash.length) {
+					var id = hash.substr(1);
+					viewer.fetch(id);
+				}
+
+				// process upload file
+				var process = function() {
+					var filesInput = document.getElementById("filesInput");
+					var file = filesInput.files[0];
+					viewer.process(file);
+				}
+
+				var uploadButton = document.getElementById('uploadButton');
+				uploadButton.onclick = process;
+			}			
 		</script>
 		<link rel="stylesheet" type="text/css" href="style/wot.css">
 		<style>
@@ -36,6 +45,8 @@
 			}
 
 			body {
+				font-size: 10pt;
+				font-family: sans-serif;
 				width: 500px;
 				margin-left: auto;
 				margin-right: auto;
@@ -48,15 +59,13 @@
 				margin-top: 0px;
 			}
 
-			#upload-button {
+			#uploadButton {
 				right: 0px;
 				position: absolute;
 			}
 
 			form {
 				position: relative;
-				font-family: sans-serif;
-				font-variant: small-caps;
 			}
 		</style>
 	</head>
@@ -70,11 +79,12 @@
 					<p>
 						<label for="filesInput">File</label> 
 						<input id="filesInput" type="file" name="file">
-						<input id="upload-button" type="button" value="Upload" onclick="javascript:process()">
+						<input id="uploadButton" type="button" value="Upload">
 					</p>
 				</form>
 			</div>
-			<div id="target" />
+			<div id="target">
+			</div>
 		</div>
 	</body>
 </html>

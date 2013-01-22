@@ -74,11 +74,11 @@ var Viewer = function(target, serviceUrl) {
 	this.overlay.width = this.overlay .height = 500;
 	this.target.appendChild(this.overlay);
 
-	var hash = window.location.hash;
-	if (hash.length) {
-		var id = hash.substr(1);
-		this.fetch(id);
-	}
+	this.link = document.createElement('a');
+	this.link.classList.add('permalink');
+	this.link.innerText = "PERMALINK";
+	this.link.style.display = "none";
+	this.target.appendChild(this.link);
 }
 
 Viewer.prototype = {
@@ -175,7 +175,8 @@ Viewer.prototype = {
 		var map = this.map;
 		var viewer = this;
 		map.classList.add('loading');
-		replayRequest.onreadystatechange = function(state) {
+		this.link.style.display = "none";
+		replayRequest.onreadystatechange = (function(state) {
 			if(replayRequest.readyState != XMLHttpRequest.DONE) {
 				return;
 			}
@@ -191,10 +192,11 @@ Viewer.prototype = {
 			var mapURL = 'maps/' + data["map"] + "_" + data["mode"] + ".png";
 			map.setAttribute('src', mapURL);
 			map.classList.remove('loading');
-
+			this.link.style.display = "block";
+			this.link.href = 'http://' + response.permalink;
 			// play
 			viewer.replay(data);
-		}
+		}).bind(this);
 
 		var formData = new FormData();
 		for (key in values) {

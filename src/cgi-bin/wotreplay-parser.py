@@ -12,7 +12,7 @@ from cStringIO import StringIO
 from gzip import GzipFile
 
 data_root = "/Users/jantemmerman/Sites/data/wotreplay-viewer/"
-viewer_location = "/~jantemmerman/wotreplay-viewer/#%s"
+viewer_location = "/~jantemmerman/wotreplay-viewer#%s"
 
 # connect to database
 db = os.path.join(data_root, 'db.sqlite')
