@@ -142,7 +142,72 @@ function to_2d_coord(position, map_boundaries, width, height) {
     return { x: x, y: y };
 }
 
-function setup(target, webservice, file) {
+function initViewer(target, webservice) {
+	// process window url
+	var hash = window.location.hash;
+	if (hash.length) {
+		var id = hash.substr(1);
+		fetchReplay(target, webservice, id);
+	}
+}
+
+function fetchReplay(target, webservice, id) {
+	// send data request
+	var replayRequest = new XMLHttpRequest();
+	replayRequest.open("POST", webservice, true);
+	
+	replayRequest.onreadystatechange = function(state) {
+		if(replayRequest.readyState != XMLHttpRequest.DONE) {
+			return;
+		}
+
+		// proces data
+		var data = JSON.parse(replayRequest.response)
+		var mapURL = 'maps/' + data["map"] + "_" + data["mode"] + ".png";
+		var map = document.getElementsByClassName("map")[0];
+		map.setAttribute('src', mapURL);
+
+		map.classList.remove('loading');
+
+		// play
+		var overlay = document.getElementsByClassName("overlay")[0];
+		replay(data, overlay);
+	}
+
+	var formData = new FormData();
+	formData.append("id", id);
+	replayRequest.send(formData);
+}
+
+function processNewReplay(target, webservice, file) {
+	// send data request
+	var replayRequest = new XMLHttpRequest();
+	replayRequest.open("POST", webservice, true);
+	
+	replayRequest.onreadystatechange = function(state) {
+		if(replayRequest.readyState != XMLHttpRequest.DONE) {
+			return;
+		}
+
+		// proces data
+		var data = JSON.parse(replayRequest.response)
+		var mapURL = 'maps/' + data["map"] + "_" + data["mode"] + ".png";
+		var map = document.getElementsByClassName("map")[0];
+		map.setAttribute('src', mapURL);
+
+		map.classList.remove('loading');
+
+		// play
+		var overlay = document.getElementsByClassName("overlay")[0];
+		replay(data, overlay);
+	}
+
+	var formData = new FormData();
+	formData.append("file", file);
+	replayRequest.send(formData);
+}
+
+function setup(target, webservice) {
 	// configure the target element as a replay viewer
 	target.classList.add('replay-viewer');
 
@@ -157,27 +222,5 @@ function setup(target, webservice, file) {
 	overlay.width = overlay.height = 500;
 	target.appendChild(overlay);
 
-	// send data request
-	var replayRequest = new XMLHttpRequest();
-	replayRequest.open("POST", webservice, true);
-	
-	replayRequest.onreadystatechange = function(state) {
-		if(replayRequest.readyState != XMLHttpRequest.DONE) {
-			return;
-		}
-
-		// proces data
-		var data = JSON.parse(replayRequest.response)
-		var mapURL = 'maps/' + data["map"] + "_" + data["mode"] + ".png";
-		map.setAttribute('src', mapURL);
-
-		map.classList.remove('loading');
-
-		// play
-		replay(data, overlay);
-	}
-
-	var formData = new FormData();
-	formData.append("file", file);
-	replayRequest.send(formData);
+	initViewer(target, webservice);
 }
