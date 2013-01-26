@@ -5,6 +5,7 @@ var Player = function() {
 	this.team 		= null;
 	this.alive		= null;
 	this.clock		= null;
+	this.turret_direction = null;
 }
 
 Player.prototype = {
@@ -43,6 +44,7 @@ Model.prototype = {
 				&& typeof(frame.player_id) != 'undefined') {
 			var player = this.getPlayer(frame.player_id);
 			player.position = frame.position;
+			player.turret_direction = frame.turret_direction;
 			player.team 	= frame.team;
 			player.clock	= this.clock;
 		}
@@ -159,6 +161,14 @@ Viewer.prototype = {
 			} else {
 				ctx.stroke();	
 			}
+
+			if (player.id == data.recorder_id) {
+				// draw turret direction
+				ctx.beginPath();
+				ctx.moveTo(coord.x,coord.y);
+				ctx.lineTo(coord.x + 50*Math.cos(player.turret_direction - Math.PI / 2),coord.y + 50*Math.sin(player.turret_direction - Math.PI / 2));
+				ctx.stroke();
+			}
 		}
 	},
 	fetch: function(id) {
@@ -212,4 +222,10 @@ function to_2d_coord(position, map_boundaries, width, height) {
     x = (x - map_boundaries[0]) * (width / (map_boundaries[1] - map_boundaries[0] + 1));
     y = (map_boundaries[3] - y) * (height / (map_boundaries[3] - map_boundaries[2] + 1));
     return { x: x, y: y };
+}
+
+function onRangeInputChange(e) {
+	if (e.target.updating) {
+		e.target.updating = true;
+	}
 }
