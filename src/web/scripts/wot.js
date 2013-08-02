@@ -5,7 +5,9 @@ var Player = function() {
 	this.team 		= null;
 	this.alive		= null;
 	this.clock		= null;
-	this.turret_direction = null;
+	this.turret_direction = 0;
+	this.hull_direction = null;
+	this.received_damage = false;
 }
 
 Player.prototype = {
@@ -13,9 +15,10 @@ Player.prototype = {
 }
 
 // Definition of Model object
-var Model = function() {
+var Model = function(game) {
 	this.players 	= {};
 	this.clock		= 0;
+	this.game		= game;
 }
 
 Model.prototype = {
@@ -44,9 +47,20 @@ Model.prototype = {
 				&& typeof(frame.player_id) != 'undefined') {
 			var player = this.getPlayer(frame.player_id);
 			player.position = frame.position;
-			player.turret_direction = frame.turret_direction;
+			player.turret_direction += frame.hull_orientation[1] * 0.34 / 2;
+			player.hull_direction = frame.hull_orientation[0];
 			player.team 	= frame.team;
 			player.clock	= this.clock;
+		}
+
+		if (typeof(frame.source) != 'undefined'
+				&& typeof(frame.health) != 'undefined') {
+			var player = this.getPlayer(frame.player_id);
+			player.received_damage = true;
+			player.clock = this.clock;
+			var vehicles = this.game.vehicles;
+			console.log(vehicles[frame.source].name + " (" + vehicles[frame.source].vehicleType + ") hit " 
+				+ vehicles[player.id].name + " (" + vehicles[player.id].vehicleType + ")" );
 		}
 
 		if (typeof(frame.target) != 'undefined'
@@ -86,7 +100,7 @@ var Viewer = function(target, serviceUrl) {
 Viewer.prototype = {
 	replay: function(data) {
 		var ctx = this.overlay.getContext("2d");
-		this.model = new Model();
+		this.model = new Model(data.summary);
 
 		var update = function(model, packets, window_start, window_size, start_ix) {
 			// model of the viewer change -> stop
@@ -118,7 +132,7 @@ Viewer.prototype = {
 			}
 		}
 
-		update.call(this, this.model, data.packets, 0.0, 0.2, 0);
+		update.call(this, this.model, data.packets, 50, 0.2, 0);
 	},
 	show: function(data, ctx) {
 		// reset overlay
@@ -148,6 +162,12 @@ Viewer.prototype = {
 
 			ctx.lineWidth = 2;
 			var color = player.id == data.recorder_id ?  recorder_color : colors[player.team];
+
+			if (player.received_damage) {
+				color = [255, 255, 255];
+				player.received_damage = false;
+			}
+
 			var age   = player.alive ? ((this.model.clock - player.clock) / 20) : 0;
 			age = age > 0.66 ? 0.66 : age;
 			var style = "rgba(" + color[0] + "," + color[1] + "," + color[2] + "," + (1 - age) +  ")";
@@ -166,7 +186,16 @@ Viewer.prototype = {
 				// draw turret direction
 				ctx.beginPath();
 				ctx.moveTo(coord.x,coord.y);
-				ctx.lineTo(coord.x + 50*Math.cos(player.turret_direction - Math.PI / 2),coord.y + 50*Math.sin(player.turret_direction - Math.PI / 2));
+				var rotation = player.hull_direction  - Math.PI / 2 +  player.turret_direction ;
+				ctx.lineTo(coord.x + 50*Math.cos(rotation),coord.y + 50*Math.sin(rotation));
+				ctx.stroke();
+
+				// draw turret direction
+				ctx.strokeStyle = "#FFFF00";
+				ctx.beginPath();
+				ctx.moveTo(coord.x,coord.y);
+				rotation = player.hull_direction  - Math.PI / 2;
+				ctx.lineTo(coord.x + 50*Math.cos(rotation),coord.y + 50*Math.sin(rotation));
 				ctx.stroke();
 			}
 		}
