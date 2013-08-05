@@ -15,10 +15,11 @@ Player.prototype = {
 }
 
 // Definition of Model object
-var Model = function(game) {
-	this.players 	= {};
-	this.clock		= 0;
-	this.game		= game;
+var Model = function(game, map_boundaries) {
+	this.players 		= {};
+	this.clock			= 0;
+	this.game			= game;
+	this.map_boundaries = map_boundaries;
 }
 
 Model.prototype = {
@@ -100,7 +101,7 @@ var Viewer = function(target, serviceUrl) {
 Viewer.prototype = {
 	replay: function(data) {
 		var ctx = this.overlay.getContext("2d");
-		this.model = new Model(data.summary);
+		this.model = new Model(data.summary, data.map_boundaries);
 
 		var update = function(model, packets, window_start, window_size, start_ix) {
 			// model of the viewer change -> stop
@@ -151,7 +152,7 @@ Viewer.prototype = {
 				continue;
 			}
 
-			var coord = to_2d_coord(player.position, [-500, 500, -500, 500], 500, 500);
+			var coord = to_2d_coord(player.position, this.model.map_boundaries, 500, 500);
 			
 			var colors = [
 				[0, 255, 0],
