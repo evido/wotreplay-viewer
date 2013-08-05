@@ -133,7 +133,7 @@ Viewer.prototype = {
 			}
 		}
 
-		update.call(this, this.model, data.packets, 50, 0.2, 0);
+		update.call(this, this.model, data.packets, 0, 0.2, 0);
 	},
 	show: function(data, ctx) {
 		// reset overlay
