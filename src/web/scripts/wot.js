@@ -229,11 +229,12 @@ Viewer.prototype = {
 			// proces data
 			var response = JSON.parse(replayRequest.response);
 			var data = response.data;
-			var mapURL = 'maps/' + data["map"] + "_" + data["mode"] + ".png";
+			var mapURL = 'maps/' + data["map"] + "_" + data["mode"] + "_" + (data["summary"].vehicles[data.recorder_id].team - 1) + ".png";
 			map.setAttribute('src', mapURL);
 			map.classList.remove('loading');
 			this.link.style.display = "block";
 			this.link.href = 'http://' + response.permalink;
+
 			// play
 			viewer.replay(data);
 		}).bind(this);
@@ -249,8 +250,8 @@ Viewer.prototype = {
 
 function to_2d_coord(position, map_boundaries, width, height) {
     var x = position[0], y = position[2], z = position[1];
-    x = (x - map_boundaries[0]) * (width / (map_boundaries[1] - map_boundaries[0] + 1));
-    y = (map_boundaries[3] - y) * (height / (map_boundaries[3] - map_boundaries[2] + 1));
+    x = (x - map_boundaries[0][0]) * (width / (map_boundaries[1][0] - map_boundaries[0][0] + 1));
+    y = (map_boundaries[1][1] - y) * (height / (map_boundaries[1][1] - map_boundaries[0][1] + 1));
     return { x: x, y: y };
 }
 

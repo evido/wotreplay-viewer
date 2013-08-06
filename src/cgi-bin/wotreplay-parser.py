@@ -47,7 +47,7 @@ else:
 data = {
 	'id': replay_id,
 	'permalink': os.environ['HTTP_HOST'] + (viewer_location % replay_id),
-	'data': json.loads(subprocess.check_output(["./wotreplay-parser", "-t", "json", "-i", path]))
+	'data': json.loads(subprocess.check_output(["./wotreplay-parser", "--parse", "--type", "json", "--input", path]))
 }
 
 data = json.dumps(data)
