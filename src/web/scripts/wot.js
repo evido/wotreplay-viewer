@@ -96,13 +96,15 @@ var Viewer = function(target, serviceUrl) {
 	this.link.innerText = "PERMALINK";
 	this.link.style.display = "none";
 	this.target.appendChild(this.link);
+
+	this.recorder_team  = null;
 }
 
 Viewer.prototype = {
 	replay: function(data) {
 		var ctx = this.overlay.getContext("2d");
 		this.model = new Model(data.summary, data.map_boundaries);
-
+		this.recorder_team = data.summary.vehicles[data.recorder_id].team - 1;
 		var update = function(model, packets, window_start, window_size, start_ix) {
 			// model of the viewer change -> stop
 			if (this.model != model) {
@@ -162,7 +164,7 @@ Viewer.prototype = {
 			var recorder_color = [0, 0, 255];
 
 			ctx.lineWidth = 2;
-			var color = player.id == data.recorder_id ?  recorder_color : colors[player.team];
+			var color = player.id == data.recorder_id ?  recorder_color : colors[player.team ^ this.recorder_team];
 
 			if (player.received_damage) {
 				color = [255, 255, 255];
