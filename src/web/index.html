@@ -1,0 +1,90 @@
+<!doctype HTML>
+<html>
+	<head>
+		<title>wotreplay-viewer</title>
+		<script type="text/javascript" src="scripts/wot.js"></script>
+		<script type="text/javascript">
+			window.onload = function() {
+				var target = document.getElementById("target");
+				var serviceUrl = "/cgi-bin/wotreplay-parser.py";
+				var viewer = new Viewer(target, serviceUrl);
+
+				// process hash
+				var hash = window.location.hash;
+				if (hash.length) {
+					var id = hash.substr(1);
+					viewer.fetch(id);
+				}
+
+				// process upload file
+				var process = function() {
+					var filesInput = document.getElementById("filesInput");
+					var file = filesInput.files[0];
+					viewer.process(file);
+				}
+
+				var uploadButton = document.getElementById('uploadButton');
+				uploadButton.onclick = process;
+			}			
+		</script>
+		<link rel="stylesheet" type="text/css" href="style/wot.css">
+		<style>
+			body {
+				background: #f2f2f2;
+			}
+
+			#target {
+				border-style: solid;
+				border-width: 1px;
+				border-color: #AAAAAA;
+				margin-left: auto;
+				margin-right: auto;
+				display: block;
+				width: 500px;
+				height: 500px;
+			}
+
+			body {
+				font-size: 10pt;
+				font-family: sans-serif;
+				width: 500px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+
+			h1 {
+				font-variant: small-caps;
+				font-weight: bold;
+				font-family: sans-serif;
+				margin-top: 0px;
+			}
+
+			#uploadButton {
+				right: 0px;
+				position: absolute;
+			}
+
+			form {
+				position: relative;
+			}
+		</style>
+	</head>
+	<body>
+		<div>
+			<h1>wotreplay-viewer</h1>
+		</div>
+		<div>
+			<div>
+				<form enctype="multipart/form-data">
+					<p>
+						<label for="filesInput">File</label> 
+						<input id="filesInput" type="file" name="file">
+						<input id="uploadButton" type="button" value="Upload">
+					</p>
+				</form>
+			</div>
+			<div id="target">
+			</div>
+		</div>
+	</body>
+</html>
