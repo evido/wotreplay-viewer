@@ -48,8 +48,8 @@ Model.prototype = {
 				&& typeof(frame.player_id) != 'undefined') {
 			var player = this.getPlayer(frame.player_id);
 			player.position = frame.position;
-			player.turret_direction += frame.hull_orientation[1] * 0.34 / 2;
-			player.hull_direction = frame.hull_orientation[0];
+			player.turret_direction += 0;
+			player.hull_direction = 0;
 			player.team 	= frame.team;
 			player.clock	= this.clock;
 		}
@@ -184,23 +184,6 @@ Viewer.prototype = {
 			} else {
 				ctx.stroke();	
 			}
-
-			if (player.id == data.recorder_id) {
-				// draw turret direction
-				ctx.beginPath();
-				ctx.moveTo(coord.x,coord.y);
-				var rotation = player.hull_direction  - Math.PI / 2 +  player.turret_direction ;
-				ctx.lineTo(coord.x + 50*Math.cos(rotation),coord.y + 50*Math.sin(rotation));
-				ctx.stroke();
-
-				// draw turret direction
-				ctx.strokeStyle = "#FFFF00";
-				ctx.beginPath();
-				ctx.moveTo(coord.x,coord.y);
-				rotation = player.hull_direction  - Math.PI / 2;
-				ctx.lineTo(coord.x + 50*Math.cos(rotation),coord.y + 50*Math.sin(rotation));
-				ctx.stroke();
-			}
 		}
 	},
 	fetch: function(id) {
@@ -231,7 +214,7 @@ Viewer.prototype = {
 			// proces data
 			var response = JSON.parse(replayRequest.response);
 			var data = response.data;
-			var mapURL = 'maps/' + data["map"] + "_" + data["mode"] + "_" + (data["summary"].vehicles[data.recorder_id].team - 1) + ".png";
+			var mapURL = 'data/maps/' + data["summary"].mapName + "_" + data["summary"].gameplayID + "_" + (data["summary"].vehicles[data.recorder_id].team - 1) + ".png";
 			map.setAttribute('src', mapURL);
 			map.classList.remove('loading');
 			this.link.style.display = "block";
